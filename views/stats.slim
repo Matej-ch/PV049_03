@@ -1,0 +1,13 @@
+
+table
+  thead
+    tr
+      th Likes count
+      th Shares count
+      th Čas
+  tbody
+  - @stats.each do |stat|
+    tr
+      td = stat[:like_count]
+      td = stat[:share_count]
+      th = stat[:time]

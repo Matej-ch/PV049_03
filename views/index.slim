@@ -1,0 +1,23 @@
+== slim :link_form, layout: false
+
+- if @links.empty?
+  p
+    | No links found.
+- else
+  table.table
+    tr
+      th URL
+      th Base domain
+      th Update
+      th Delete
+    - @links.each do |link|
+      tr
+        td.name
+          a href="/link/#{link[:id]}/stats" target="_blank" = link[:url]
+        td.price = link[:domain]
+        td.price
+          a href="/link/#{link[:id]}" Edit
+        td
+          form action="/link/#{link[:id]}" method="post"
+            input type="submit" value="X"
+            input type="hidden" name="_method" value="delete"

@@ -37,25 +37,22 @@ module Facebook
     end
 
     def unknown_res(url)
-      results = []
-      results << {
+      [{
         'host' => UNKNOWN, # base domain,
         'url' => url,
         'article_likes' => UNKNOWN, # likes_count
         'article_shares' => UNKNOWN # shares_count
-      }
+      }]
     end
 
     def inside_check(stripped_path, url)
-      results = []
       req = Net::HTTP.new(URI(url).host, URI(url).port)
       if stripped_path == 0 || stripped_path == 1
-        results = correct_res(url)
+        correct_res(url)
       else
         res = req.request_head(path)
-        results = unknown_res(url) if res.code != '202'
+        unknown_res(url) if res.code != '202'
       end
-      results
     end
   end
 end

@@ -26,6 +26,10 @@ class FacebookStats < Sinatra::Base
     def all_links_get
       @links = DB[:Links].all
     end
+
+    def db_urls
+      @urls = DB.from(:Links).select(:id, :url)
+    end
   end
 
   not_found do
@@ -45,7 +49,8 @@ class FacebookStats < Sinatra::Base
 
     stats_dataset.insert(:link_id => lid,
                          :like_count => face_data['article_likes'],
-                         :share_count => face_data['article_shares'])
+                         :share_count => face_data['article_shares'],
+                         :time => Time.now)
     redirect back
   end
 
@@ -54,13 +59,37 @@ class FacebookStats < Sinatra::Base
     stats_dataset.where(:link_id => params[:link]).delete
     links_dataset.where(:id => params[:link]).delete
     all_links_get
-    redirect back
+    redirect to('/')
   end
 
   # GET - get links statistics
   get '/link/:link/stats' do
+    @link = links_dataset.first(:id => params[:link])
     @stats = stats_dataset.where(:link_id => params[:link])
     slim :stats
+  end
+
+  # refresh statistics one link
+  get '/refreshOne/:link' do
+    link_data = links_dataset.first(:id => params[:link])
+    face_data = Facebook.data(link_data[:url])
+    stats_dataset.insert(:link_id => params['link'],
+                         :like_count => face_data['article_likes'],
+                         :share_count => face_data['article_shares'],
+                         :time => Time.now)
+    redirect back
+  end
+
+  # refresh statistics all links
+  get '/refresh' do
+    db_urls.each do |url|
+      face_data = Facebook.data(url[:url])
+      stats_dataset.insert(:link_id => url[:id],
+                           :like_count => face_data['article_likes'],
+                           :share_count => face_data['article_shares'],
+                           :time => Time.now)
+    end
+    redirect back
   end
 
   get '/link/:link' do
@@ -74,7 +103,8 @@ class FacebookStats < Sinatra::Base
     links_dataset.where(:id => params['link']).update(:url => params[:url],
                                                       :domain => face_data['host'])
     stats_dataset.where(:link_id => params['link']).update(:like_count => face_data['article_likes'],
-                                                           :share_count => face_data['article_shares'])
+                                                           :share_count => face_data['article_shares'],
+                                                           :time => Time.now)
     all_links_get
     redirect to('/')
   end
